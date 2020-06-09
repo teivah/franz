@@ -19,40 +19,13 @@ struct Tester<'a> {
 }
 
 impl Tester<'_> {
-    fn new(hosts: Vec<String>, requested_required_acks: i8) -> Result<Self, String> {
-        let required_acks: RequiredAcks;
-        match requested_required_acks {
-            1 => {
-                required_acks = RequiredAcks::One;
-            }
-            0 => {
-                required_acks = RequiredAcks::None;
-            }
-            -1 => {
-                required_acks = RequiredAcks::All;
-            }
-            v => {
-                return Err(format_args!(
-                    "unknown required acks option ({}), it should be either 1, 0 or -1",
-                    requested_required_acks
-                )
-                .to_string())
-            }
-        }
+    pub fn new(hosts: Vec<String>, requested_required_acks: i8) -> Result<Self, String> {
+        let result = create_producer(hosts, requested_required_acks)?;
 
-        let result_producer = Producer::from_hosts(hosts)
-            .with_required_acks(required_acks)
-            .create();
-        match result_producer {
-            Err(e) => return Err(format_args!("unable to create producer: {}", e).to_string()),
-            Ok(_) => (),
-        }
-
-        let tester = Tester {
+        Ok(Tester {
             campaignID: Uuid::new_v4().to_string().as_str(),
-            producer: result_producer.unwrap(),
-        };
-        Ok(tester)
+            producer: result,
+        })
     }
 
     fn produce(&self) {
@@ -64,5 +37,28 @@ impl Tester<'_> {
                 .unwrap();
             buf.clear();
         }
+    }
+}
+
+fn create_producer(hosts: Vec<String>, requested_required_acks: i8) -> Result<Producer, String> {
+    let required_acks = match requested_required_acks {
+        1 => RequiredAcks::One,
+        0 => RequiredAcks::None,
+        -1 => RequiredAcks::All,
+        _ => {
+            return Err(format_args!(
+                "unknown required acks option ({}), it should be either 1, 0 or -1",
+                requested_required_acks
+            )
+            .to_string())
+        }
+    };
+
+    let result_producer = Producer::from_hosts(hosts)
+        .with_required_acks(required_acks)
+        .create();
+    match result_producer {
+        Err(e) => return Err(format_args!("unable to create producer: {}", e).to_string()),
+        Ok(p) => return Ok(p),
     }
 }
