@@ -1,9 +1,14 @@
 [package]
 name = "franz"
 version = "0.1.0"
-authors = ["teivah <t.harsanyi@thebeat.co>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+actix-web = "2"
+actix-rt = "1.0.0"
+env_logger = "0.7"
+clap = "2"
+kafka = "0.8"
+uuid = { version = "0.8", features = ["v4"] }
