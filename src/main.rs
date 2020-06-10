@@ -8,7 +8,6 @@ use std::borrow::Borrow;
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
-    // fn main() {
     let args = ClapApp::new("franz")
         .arg(
             Arg::with_name("kafka_hosts")
@@ -36,13 +35,6 @@ async fn main() -> std::io::Result<()> {
     .run()
     .await
 }
-
-// pub fn produce(
-//     server: Server,
-//     req: web::Json<Request>,
-// ) -> impl futures::Future<Output = HttpResponse> {
-//     server.produce(req)
-// }
 
 struct Server {
     kafka_hosts: Vec<String>,
