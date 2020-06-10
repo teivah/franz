@@ -23,7 +23,6 @@ async fn main() -> std::io::Result<()> {
         .expect("kafka_hosts argument not set");
 
     let server = Server::new(kafka_hosts);
-    // let produce = |req: web::Json<Request>| produce(server, req);
     let produce = |req: web::Json<Request>| Server::produce(&server, req);
 
     std::env::set_var("RUST_LOG", "actix_web=info");
