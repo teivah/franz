@@ -2,39 +2,14 @@ mod kafka;
 
 use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer};
 use clap::{App as ClapApp, Arg, ArgMatches};
+use futures::Future;
 use serde::{Deserialize, Serialize};
 use std::borrow::Borrow;
 
-fn string_to_static_str(s: String) -> &'static str {
-    Box::leak(s.into_boxed_str())
-}
-
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
-    let args = setupApplication();
-    let kafka_hosts = args
-        .value_of("kafka_hosts")
-        .expect("kafka_hosts argument not set");
-
-    // let server = ;
-    std::env::set_var("RUST_LOG", "actix_web=info");
-    env_logger::init();
-
-    let req = Server::new(kafka_hosts);
-    let f1 = |x: web::Json<Request>| Server::produce(req, x);
-
-    HttpServer::new(|| {
-        App::new()
-            .wrap(middleware::Logger::default())
-            .service(web::resource("/produce").route(web::post().to(f1)))
-    })
-    .bind("127.0.0.1:8080")?
-    .run()
-    .await
-}
-
-fn setupApplication() -> &'static ArgMatches<'static> {
-    &ClapApp::new("franz")
+    // fn main() {
+    let args = ClapApp::new("franz")
         .arg(
             Arg::with_name("kafka_hosts")
                 .short("k")
@@ -42,29 +17,41 @@ fn setupApplication() -> &'static ArgMatches<'static> {
                 .takes_value(true)
                 .help("Kafka hosts separated by a colon"),
         )
-        .get_matches()
+        .get_matches();
+    let kafka_hosts = args
+        .value_of("kafka_hosts")
+        .expect("kafka_hosts argument not set");
+
+    let server = Server::new(kafka_hosts);
+    // let produce = |req: web::Json<Request>| produce(server, req);
+    let produce = |req: web::Json<Request>| Server::produce(&server, req);
+
+    std::env::set_var("RUST_LOG", "actix_web=info");
+    env_logger::init();
+    HttpServer::new(move || {
+        App::new()
+            .wrap(middleware::Logger::default())
+            .service(web::resource("/produce").route(web::post().to(produce)))
+    })
+    .bind("127.0.0.1:8080")?
+    .run()
+    .await
 }
+
+// pub fn produce(
+//     server: Server,
+//     req: web::Json<Request>,
+// ) -> impl futures::Future<Output = HttpResponse> {
+//     server.produce(req)
+// }
 
 struct Server {
     kafka_hosts: Vec<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct Request {
-    topic: String,
-    payload: String,
-    number_of_messages: i32,
-    requested_required_acks: i8,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct Response {
-    id: String,
-}
-
 impl Server {
-    fn new(kafka_hosts: &str) -> &'static Self {
-        &Server {
+    fn new(kafka_hosts: &str) -> Server {
+        Server {
             kafka_hosts: kafka_hosts
                 .split(",")
                 .map(|s| s.to_string())
@@ -91,4 +78,17 @@ impl Server {
         let _ = worker.produce();
         HttpResponse::Ok().json(Response { id: worker.id() })
     }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Request {
+    topic: String,
+    payload: String,
+    number_of_messages: i32,
+    requested_required_acks: i8,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Response {
+    id: String,
 }
