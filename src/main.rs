@@ -46,7 +46,8 @@ fn parse_kafka_hosts(kafka_hosts: &str) -> Vec<String> {
 struct Request {
     topic: String,
     payload: String,
-    number_of_messages: i32,
+    expected_total: u32,
+    producers: u32,
     requested_required_acks: i8,
 }
 
@@ -61,12 +62,13 @@ async fn produce(kafka_hosts: web::Data<Vec<String>>, req: web::Json<Request>) -
         kafka::SendCfg {
             topic: (&req.topic).to_string(),
             payload: (&req.payload).to_string(),
-            number_of_messages: req.number_of_messages,
+            total_number_of_messages: req.expected_total,
             requested_required_acks: req.requested_required_acks,
+            producer_count: req.producers,
         },
     );
 
-    let worker = match worker_result {
+    let mut worker = match worker_result {
         Err(e) => {
             return HttpResponse::InternalServerError()
                 .body(format!("unable to create worker: {}", e))

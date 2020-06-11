@@ -1,35 +1,53 @@
 use kafka::producer::{Producer, Record, RequiredAcks};
+use std::borrow::Borrow;
+use tokio::task;
 use uuid::Uuid;
 
 pub struct SendCfg {
     pub topic: String,
     pub payload: String,
-    pub number_of_messages: i32,
+    pub producer_count: u32,
+    pub total_number_of_messages: u32,
     pub requested_required_acks: i8,
 }
 
 pub struct Worker {
     id: Uuid,
-    producer: Producer,
+    producers: Vec<Producer>,
     send_cfg: SendCfg,
 }
 
 impl Worker {
     pub fn new(hosts: Vec<String>, send_cfg: SendCfg) -> Result<Self, String> {
+        let mut producers: Vec<Producer> = Vec::with_capacity(send_cfg.producer_count as usize);
+        for _ in 0..send_cfg.producer_count as usize {
+            producers.push(create_producer(
+                hosts.clone(),
+                send_cfg.requested_required_acks,
+            )?);
+        }
+
         Ok(Worker {
             id: Uuid::new_v4(),
-            producer: create_producer(hosts, send_cfg.requested_required_acks)?,
+            producers,
             send_cfg,
         })
     }
 
-    pub fn produce(mut self) {
-        for _ in 0..self.send_cfg.number_of_messages {
-            let result = self.producer.send(&Record::from_value(
-                self.send_cfg.topic.as_str(),
-                self.send_cfg.payload.as_str(),
-            ));
-            result.expect("error");
+    pub fn produce(self) {
+        let messages_per_producer =
+            self.send_cfg.total_number_of_messages / self.send_cfg.producer_count;
+
+        for mut producer in self.producers.into_iter() {
+            let topic = self.send_cfg.topic.clone();
+            let payload = self.send_cfg.payload.clone();
+            task::spawn(async move {
+                for _ in 0..messages_per_producer {
+                    let result =
+                        producer.send(&Record::from_value(topic.as_str(), payload.as_str()));
+                    result.expect("error");
+                }
+            });
         }
     }
 
