@@ -23,10 +23,21 @@ async fn main() -> std::io::Result<()> {
                 .takes_value(true)
                 .help("Kafka hosts separated by a colon"),
         )
+        .arg(
+            Arg::with_name("http_port")
+                .short("p")
+                .long("http_port")
+                .takes_value(true)
+                .help("HTTP port"),
+        )
         .get_matches();
+
     let kafka_hosts_args = args
         .value_of("kafka_hosts")
         .expect("kafka_hosts argument not set");
+    let http_port = args
+        .value_of("http_port")
+        .expect("http_port argument not set");
 
     let kafka_hosts = parse_kafka_hosts(kafka_hosts_args);
 
@@ -39,7 +50,7 @@ async fn main() -> std::io::Result<()> {
             .service(web::resource("/produce").route(web::post().to(produce)))
             .service(web::resource("/status/{id}").route(web::get().to(get_status)))
     })
-    .bind("127.0.0.1:8080")?
+    .bind(format!("0.0.0.0:{}", http_port))?
     .run()
     .await
 }
