@@ -1,6 +1,4 @@
 use kafka::producer::{Producer, Record, RequiredAcks};
-use std::borrow::Borrow;
-use std::fmt::Write;
 use uuid::Uuid;
 
 pub struct SendCfg {

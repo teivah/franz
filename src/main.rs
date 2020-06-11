@@ -1,10 +1,8 @@
 mod kafka;
 
-use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer};
-use clap::{App as ClapApp, Arg, ArgMatches};
-use futures::Future;
+use actix_web::{middleware, web, App, HttpResponse, HttpServer};
+use clap::{App as ClapApp, Arg};
 use serde::{Deserialize, Serialize};
-use std::borrow::Borrow;
 use tokio::task;
 
 #[actix_rt::main]
@@ -57,7 +55,7 @@ struct Response {
     id: String,
 }
 
-async fn produce<'a>(kafka_hosts: web::Data<Vec<String>>, req: web::Json<Request>) -> HttpResponse {
+async fn produce(kafka_hosts: web::Data<Vec<String>>, req: web::Json<Request>) -> HttpResponse {
     let worker_result = kafka::Worker::new(
         kafka_hosts.to_vec(),
         kafka::SendCfg {
@@ -69,11 +67,14 @@ async fn produce<'a>(kafka_hosts: web::Data<Vec<String>>, req: web::Json<Request
     );
 
     let worker = match worker_result {
-        Err(e) => return HttpResponse::InternalServerError().body("unable to create worker"),
+        Err(e) => {
+            return HttpResponse::InternalServerError()
+                .body(format!("unable to create worker: {}", e))
+        }
         Ok(e) => e,
     };
     let id = worker.id();
 
     task::spawn(async move { worker.produce() });
-    HttpResponse::Ok().json(Response { id })
+    HttpResponse::Created().json(Response { id })
 }
