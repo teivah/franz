@@ -640,6 +640,7 @@ dependencies = [
  "futures",
  "json",
  "kafka",
+ "log 0.4.8",
  "serde",
  "serde_json",
  "tokio",

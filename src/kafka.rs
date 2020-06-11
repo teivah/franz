@@ -1,4 +1,5 @@
 use kafka::producer::{Producer, Record, RequiredAcks};
+use log::warn;
 use std::borrow::Borrow;
 use tokio::task;
 use uuid::Uuid;
@@ -45,7 +46,9 @@ impl Worker {
                 for _ in 0..messages_per_producer {
                     let result =
                         producer.send(&Record::from_value(topic.as_str(), payload.as_str()));
-                    result.expect("error");
+                    if let Err(err) = result {
+                        warn!["unable to produce message: {}", err];
+                    }
                 }
             });
         }
