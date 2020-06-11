@@ -1,7 +1,6 @@
 use kafka::producer::{Producer, Record, RequiredAcks};
 use log::warn;
 use serde::{Deserialize, Serialize};
-use std::borrow::Borrow;
 use tokio::task;
 use uuid::Uuid;
 
