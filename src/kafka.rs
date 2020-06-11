@@ -1,6 +1,7 @@
 use kafka::producer::{Producer, Record, RequiredAcks};
 use log::warn;
 use serde::{Deserialize, Serialize};
+use std::time::{Duration, Instant};
 use tokio::task;
 use uuid::Uuid;
 
@@ -21,10 +22,12 @@ pub struct Job {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct JobResult {
     pub messages_sent: i32,
+    pub average_latency: f32,
 }
 
 struct ProducerState {
     messages_sent: i32,
+    duration: Duration,
 }
 
 impl Job {
@@ -53,28 +56,41 @@ impl Job {
             let topic = self.send_cfg.topic.clone();
             let payload = self.send_cfg.payload.clone();
             let join = task::spawn(async move {
+                let mut sent = 0;
+                let start = Instant::now();
                 for _ in 0..messages_per_producer {
                     let result =
                         producer.send(&Record::from_value(topic.as_str(), payload.as_str()));
+                    sent += 1;
                     if let Err(e) = result {
                         warn!["unable to produce message: {}", e];
                     }
                 }
-                ProducerState { messages_sent: 4 }
+                ProducerState {
+                    messages_sent: sent,
+                    duration: start.elapsed(),
+                }
             });
             joins.push(join);
         }
 
         let mut messages_sent = 0;
+        let mut total_time: u128 = 0;
         for join in joins {
             let producer_state: Result<ProducerState, task::JoinError> = join.await;
 
             match producer_state {
-                Ok(s) => messages_sent += s.messages_sent,
+                Ok(s) => {
+                    messages_sent += s.messages_sent;
+                    total_time += s.duration.as_millis();
+                }
                 Err(e) => warn!["unable to produce message: {}", e],
             }
         }
-        JobResult { messages_sent }
+        JobResult {
+            messages_sent,
+            average_latency: total_time as f32 / messages_sent as f32,
+        }
     }
 
     pub fn id(&self) -> String {
