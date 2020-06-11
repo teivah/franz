@@ -25,12 +25,13 @@ impl Worker {
         })
     }
 
-    pub async fn produce(&mut self) {
-        for i in 0..self.send_cfg.number_of_messages {
+    pub fn produce(mut self) {
+        for _ in 0..self.send_cfg.number_of_messages {
             let result = self.producer.send(&Record::from_value(
                 self.send_cfg.topic.as_str(),
                 self.send_cfg.payload.as_str(),
             ));
+            result.expect("error");
         }
     }
 
