@@ -1,6 +1,7 @@
 use kafka::producer::{Producer, Record, RequiredAcks};
 use log::warn;
 use std::borrow::Borrow;
+use std::process::Output;
 use tokio::task;
 use uuid::Uuid;
 
@@ -12,13 +13,21 @@ pub struct SendCfg {
     pub requested_required_acks: i8,
 }
 
-pub struct Worker {
+pub struct Job {
     id: Uuid,
     producers: Vec<Producer>,
     send_cfg: SendCfg,
 }
 
-impl Worker {
+pub struct JobResult {
+    pub messages_sent: i32,
+}
+
+struct ProducerState {
+    messages_sent: i32,
+}
+
+impl Job {
     pub fn new(hosts: Vec<String>, send_cfg: SendCfg) -> Result<Self, String> {
         let mut producers: Vec<Producer> = Vec::with_capacity(send_cfg.producer_count as usize);
         for _ in 0..send_cfg.producer_count as usize {
@@ -28,30 +37,47 @@ impl Worker {
             )?);
         }
 
-        Ok(Worker {
+        Ok(Job {
             id: Uuid::new_v4(),
             producers,
             send_cfg,
         })
     }
 
-    pub fn produce(self) {
+    pub fn produce(self) -> JobResult {
         let messages_per_producer =
             self.send_cfg.total_number_of_messages / self.send_cfg.producer_count;
+        let mut joins: Vec<task::JoinHandle<ProducerState>> = vec![];
 
         for mut producer in self.producers.into_iter() {
             let topic = self.send_cfg.topic.clone();
             let payload = self.send_cfg.payload.clone();
-            task::spawn(async move {
+            let join = task::spawn(async move {
                 for _ in 0..messages_per_producer {
                     let result =
                         producer.send(&Record::from_value(topic.as_str(), payload.as_str()));
-                    if let Err(err) = result {
-                        warn!["unable to produce message: {}", err];
+                    if let Err(e) = result {
+                        warn!["unable to produce message: {}", e];
                     }
                 }
+                ProducerState { messages_sent: 4 }
             });
+            joins.push(join);
         }
+
+        JobResult { messages_sent: 1 }
+        // async {
+        //     let mut messages_sent = 0;
+        //     for join in joins {
+        //         let producer_state: Result<ProducerState, task::JoinError> = join.await;
+        //
+        //         match producer_state {
+        //             Ok(s) => messages_sent += s.messages_sent,
+        //             Err(e) => (),
+        //         }
+        //     }
+        //     JobResult { messages_sent }
+        // }
     }
 
     pub fn id(&self) -> String {

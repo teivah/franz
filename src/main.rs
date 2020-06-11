@@ -57,7 +57,7 @@ struct Response {
 }
 
 async fn produce(kafka_hosts: web::Data<Vec<String>>, req: web::Json<Request>) -> HttpResponse {
-    let worker_result = kafka::Worker::new(
+    let worker_result = kafka::Job::new(
         kafka_hosts.to_vec(),
         kafka::SendCfg {
             topic: (&req.topic).to_string(),
