@@ -1,9 +1,18 @@
 mod kafka;
 
+#[macro_use]
+extern crate lazy_static;
+
 use actix_web::{middleware, web, App, HttpResponse, HttpServer};
 use clap::{App as ClapApp, Arg};
+use dashmap::DashMap;
 use serde::{Deserialize, Serialize};
+use std::borrow::Borrow;
 use tokio::task;
+
+lazy_static! {
+    static ref STATE: DashMap<String, kafka::JobResult> = DashMap::new();
+}
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
@@ -29,6 +38,7 @@ async fn main() -> std::io::Result<()> {
             .data(kafka_hosts.clone())
             .wrap(middleware::Logger::default())
             .service(web::resource("/produce").route(web::post().to(produce)))
+            .service(web::resource("/status/{id}").route(web::get().to(get_status)))
     })
     .bind("127.0.0.1:8080")?
     .run()
@@ -68,18 +78,28 @@ async fn produce(kafka_hosts: web::Data<Vec<String>>, req: web::Json<Request>) -
         },
     );
 
-    let mut worker = match worker_result {
+    let worker = match worker_result {
         Err(e) => {
             return HttpResponse::InternalServerError()
                 .body(format!("unable to create worker: {}", e))
         }
         Ok(e) => e,
     };
-    let id = worker.id();
-
+    let task_id = worker.id().clone();
+    let response_id = worker.id().clone();
     task::spawn(async {
-        let x = worker.produce();
-        x.await;
+        let future = worker.produce();
+        let result = future.await;
+        STATE.insert(task_id, result);
     });
-    HttpResponse::Created().json(Response { id })
+    HttpResponse::Created().json(Response { id: response_id })
+}
+
+async fn get_status(path: web::Path<(String,)>) -> HttpResponse {
+    let id = &path.0;
+    let status = STATE.get(id);
+    match status {
+        Some(s) => HttpResponse::Ok().json(s.value()),
+        None => HttpResponse::NotFound().finish(),
+    }
 }

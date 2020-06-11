@@ -1,5 +1,6 @@
 use kafka::producer::{Producer, Record, RequiredAcks};
 use log::warn;
+use serde::{Deserialize, Serialize};
 use std::borrow::Borrow;
 use tokio::task;
 use uuid::Uuid;
@@ -18,6 +19,7 @@ pub struct Job {
     send_cfg: SendCfg,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct JobResult {
     pub messages_sent: i32,
 }
@@ -70,7 +72,7 @@ impl Job {
 
             match producer_state {
                 Ok(s) => messages_sent += s.messages_sent,
-                Err(e) => (),
+                Err(e) => warn!["unable to produce message: {}", e],
             }
         }
         JobResult { messages_sent }
