@@ -1,7 +1,6 @@
 use kafka::producer::{Producer, Record, RequiredAcks};
 use log::warn;
 use std::borrow::Borrow;
-use std::process::Output;
 use tokio::task;
 use uuid::Uuid;
 
@@ -44,7 +43,7 @@ impl Job {
         })
     }
 
-    pub fn produce(self) -> JobResult {
+    pub async fn produce(self) -> JobResult {
         let messages_per_producer =
             self.send_cfg.total_number_of_messages / self.send_cfg.producer_count;
         let mut joins: Vec<task::JoinHandle<ProducerState>> = vec![];
@@ -65,19 +64,16 @@ impl Job {
             joins.push(join);
         }
 
-        JobResult { messages_sent: 1 }
-        // async {
-        //     let mut messages_sent = 0;
-        //     for join in joins {
-        //         let producer_state: Result<ProducerState, task::JoinError> = join.await;
-        //
-        //         match producer_state {
-        //             Ok(s) => messages_sent += s.messages_sent,
-        //             Err(e) => (),
-        //         }
-        //     }
-        //     JobResult { messages_sent }
-        // }
+        let mut messages_sent = 0;
+        for join in joins {
+            let producer_state: Result<ProducerState, task::JoinError> = join.await;
+
+            match producer_state {
+                Ok(s) => messages_sent += s.messages_sent,
+                Err(e) => (),
+            }
+        }
+        JobResult { messages_sent }
     }
 
     pub fn id(&self) -> String {

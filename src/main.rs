@@ -77,6 +77,9 @@ async fn produce(kafka_hosts: web::Data<Vec<String>>, req: web::Json<Request>) -
     };
     let id = worker.id();
 
-    task::spawn(async move { worker.produce() });
+    task::spawn(async {
+        let x = worker.produce();
+        x.await;
+    });
     HttpResponse::Created().json(Response { id })
 }
