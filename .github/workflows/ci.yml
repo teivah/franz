@@ -27,3 +27,4 @@ jobs:
         password: ${{ Secrets.DOCKER_PASSWORD }}
         repository: teivah/franz
         tags: kafka
+        dockerfile: Dockerfile
