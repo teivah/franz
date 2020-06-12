@@ -6,7 +6,10 @@ extern crate lazy_static;
 use actix_web::{middleware, web, App, HttpResponse, HttpServer};
 use clap::{App as ClapApp, Arg};
 use dashmap::DashMap;
+use futures::executor::block_on;
+use futures::{FutureExt, TryFutureExt};
 use serde::{Deserialize, Serialize};
+use std::io::Read;
 use std::{thread, time};
 use tokio::task;
 
@@ -98,9 +101,9 @@ async fn produce(kafka_hosts: web::Data<Vec<String>>, req: web::Json<Request>) -
     };
     let task_id = worker.id().clone();
     let response_id = worker.id().clone();
-    task::spawn(async {
+    task::spawn_blocking(|| {
         let future = worker.produce();
-        let result = future.await;
+        let result = block_on(future);
         STATE.insert(task_id, result);
     });
     HttpResponse::Created().json(Response { id: response_id })
