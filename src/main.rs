@@ -64,7 +64,7 @@ fn parse_kafka_hosts(kafka_hosts: &str) -> Vec<String> {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Request {
+struct JobRequest {
     topic: String,
     payload: String,
     expected_total: u32,
@@ -73,11 +73,17 @@ struct Request {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Response {
+struct JobCreated {
     id: String,
 }
 
-async fn produce(kafka_hosts: web::Data<Vec<String>>, req: web::Json<Request>) -> HttpResponse {
+#[derive(Debug, Serialize, Deserialize)]
+struct JobResult {
+    pub messages_sent: i32,
+    pub average_latency_ms: f32,
+}
+
+async fn produce(kafka_hosts: web::Data<Vec<String>>, req: web::Json<JobRequest>) -> HttpResponse {
     let worker_result = kafka::Job::new(
         kafka_hosts.to_vec(),
         kafka::SendCfg {
@@ -96,17 +102,34 @@ async fn produce(kafka_hosts: web::Data<Vec<String>>, req: web::Json<Request>) -
         }
         Ok(e) => e,
     };
+    STATE.insert(
+        worker.id().clone(),
+        kafka::JobResult {
+            on_going: true,
+            messages_sent: 0,
+            average_latency_ms: 0.0,
+        },
+    );
+
     let task_id = worker.id().clone();
     let response_id = worker.id().clone();
     task::spawn_blocking(|| STATE.insert(task_id, block_on(worker.produce())));
-    HttpResponse::Created().json(Response { id: response_id })
+    HttpResponse::Created().json(JobCreated { id: response_id })
 }
 
 async fn get_status(path: web::Path<(String,)>) -> HttpResponse {
     let id = &path.0;
     let status = STATE.get(id);
     match status {
-        Some(s) => HttpResponse::Ok().json(s.value()),
+        Some(s) => {
+            return match s.on_going {
+                true => HttpResponse::NoContent().finish(),
+                false => HttpResponse::Ok().json(JobResult {
+                    messages_sent: s.messages_sent,
+                    average_latency_ms: s.average_latency_ms,
+                }),
+            }
+        }
         None => HttpResponse::NotFound().finish(),
     }
 }

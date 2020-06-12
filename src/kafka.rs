@@ -21,8 +21,9 @@ pub struct Job {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct JobResult {
+    pub on_going: bool,
     pub messages_sent: i32,
-    pub average_latency: f32,
+    pub average_latency_ms: f32,
 }
 
 struct ProducerState {
@@ -75,21 +76,22 @@ impl Job {
         }
 
         let mut messages_sent = 0;
-        let mut total_time: u128 = 0;
+        let mut total_time_ms: u128 = 0;
         for join in joins {
             let producer_state: Result<ProducerState, task::JoinError> = join.await;
 
             match producer_state {
                 Ok(s) => {
                     messages_sent += s.messages_sent;
-                    total_time += s.duration.as_millis();
+                    total_time_ms += s.duration.as_millis();
                 }
                 Err(e) => warn!["unable to produce message: {}", e],
             }
         }
         JobResult {
+            on_going: false,
             messages_sent,
-            average_latency: total_time as f32 / messages_sent as f32,
+            average_latency_ms: total_time_ms as f32 / messages_sent as f32,
         }
     }
 
