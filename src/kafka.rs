@@ -55,7 +55,7 @@ impl Job {
         for mut producer in self.producers.into_iter() {
             let topic = self.send_cfg.topic.clone();
             let payload = self.send_cfg.payload.clone();
-            let join = task::spawn(async move {
+            let join = task::spawn_blocking(move || {
                 let mut sent = 0;
                 let start = Instant::now();
                 for _ in 0..messages_per_producer {
