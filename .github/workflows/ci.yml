@@ -23,5 +23,7 @@ jobs:
     - name: Build and push Docker images
       uses: docker/build-push-action@v1.1.0
       with:
+        username: ${{ Secrets.DOCKER_USERNAME }}
+        password: ${{ Secrets.DOCKER_PASSWORD }}
         repository: teivah/franz
         tags: kafka
