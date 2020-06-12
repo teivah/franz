@@ -50,7 +50,7 @@ JSON example:
 }
 ```
 
-The response returns an 201 containing an HATEAOS response wit the job ID created.
+The response returns an 201 containing an HATEAOS response with the job ID created.
 
 ```json
 {

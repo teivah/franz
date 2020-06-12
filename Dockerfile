@@ -10,5 +10,5 @@ RUN cargo build --release
 RUN cargo install --path .
 
 FROM alpine:latest
-COPY --from=cargo-build /usr/local/cargo/bin/franz /usr/local/bin/franz
+COPY --from=cargo-build /usr/local/cargo/bin/franz /bin
 CMD ["franz"]
