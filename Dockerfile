@@ -1,14 +1,10 @@
-FROM rust:latest as cargo-build
-WORKDIR /usr/src/franz
-COPY Cargo.toml Cargo.toml
-RUN mkdir src/
-RUN echo "fn main() {println!(\"if you see this, the build broke\")}" > src/main.rs
+FROM rust:1.44.0 as build
+WORKDIR /app
+COPY Cargo.toml /app/
+COPY src/ /app/src
 RUN cargo build --release
-RUN rm -f target/release/deps/franz*
-COPY . .
-RUN cargo build --release
-RUN cargo install --path .
 
-FROM alpine:latest
-COPY --from=cargo-build /usr/local/cargo/bin/franz /bin
-CMD ["franz"]
+FROM rust:1.44.0
+WORKDIR /app
+COPY --from=build /app/target/release/franz /app/
+ENTRYPOINT ["/app/franz"]
