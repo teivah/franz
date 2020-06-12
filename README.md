@@ -54,13 +54,9 @@ The response returns an 201 containing an HATEAOS response wit the job ID create
 
 ```json
 {
-    "links": [
-        {
-            "href": "/status/fc013d92-353e-455d-a899-bf3425521547",
-            "rel": "status",
-            "type": "GET"
-        }
-    ]
+    "links": {
+        "status": "/status/7bb17429-50bf-4f79-b8de-db1916683294"
+    }
 }
 ```
 
@@ -68,7 +64,7 @@ The response returns an 201 containing an HATEAOS response wit the job ID create
 
 Description: Get job status.
 
-Path: GET `/status/{id}`
+Path: GET `/status/{id}` (`id` being the one returned by `/produce`)
 
 If the job has been completed, it will return a 200:
 

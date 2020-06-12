@@ -74,15 +74,12 @@ struct JobRequest {
 
 #[derive(Debug, Serialize, Deserialize)]
 struct JobCreated {
-    links: Vec<Link>,
+    links: Link,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Link {
-    href: String,
-    rel: String,
-    #[serde(rename(serialize = "type"))]
-    link_type: String,
+    status: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -123,11 +120,9 @@ async fn produce(kafka_hosts: web::Data<Vec<String>>, req: web::Json<JobRequest>
     let response_id = worker.id().clone();
     task::spawn_blocking(|| STATE.insert(task_id, block_on(worker.produce())));
     HttpResponse::Created().json(JobCreated {
-        links: vec![Link {
-            href: format!["/status/{}", response_id],
-            rel: "status".to_string(),
-            link_type: "GET".to_string(),
-        }],
+        links: Link {
+            status: format!["/status/{}", response_id],
+        },
     })
 }
 
