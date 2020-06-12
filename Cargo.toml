@@ -20,3 +20,4 @@ tokio = {version = "0.2.13", features = ["rt-core", "blocking"]}
 log = "0.4.8"
 dashmap = "3.11.4"
 lazy_static = "1.4.0"
+proc-macro-hack = "0.5.15"

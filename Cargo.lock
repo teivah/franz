@@ -683,6 +683,7 @@ dependencies = [
  "kafka",
  "lazy_static",
  "log 0.4.8",
+ "proc-macro-hack",
  "serde",
  "serde_json",
  "tokio",

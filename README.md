@@ -1,13 +1,15 @@
-![Rust](https://github.com/teivah/franz/workflows/CI/badge.svg)
+![CI](https://github.com/teivah/franz/workflows/CI/badge.svg)
 
 # franz
+
+A tiny Kafka producer load tester, written in Rust.
 
 # Run
 
 ## Parameters
 
-* `-p`: port used by franz
-* `-k`: kafka hosts
+* `-p`: HTTP port used by franz.
+* `-k`: Kafka hosts, comma separated.
 
 ## Docker
 
@@ -15,7 +17,7 @@
 $ docker run -p 8080:8080 teivah/franz -- -p 8080 -k kafka:9092
 ```
 
-## Local
+## Local
 
 ```shell script
 $ cargo build --release
@@ -48,7 +50,7 @@ JSON example:
 }
 ```
 
-The response returns an 201 containing the status ID.
+The response returns an 201 containing an HATEAOS response wit the job ID created.
 
 ```json
 {
@@ -64,7 +66,7 @@ The response returns an 201 containing the status ID.
 
 ## Status
 
-Description: Get results
+Description: Get job status.
 
 Path: GET `/status/{id}`
 
@@ -72,9 +74,9 @@ If the job has been completed, it will return a 200:
 
 ```json
 {
-    "messages_sent": 100,
-    "average_latency_ms": 225.9
+    "messages_sent": 1000000,
+    "average_latency_ms": 6.9
 }
 ```
 
-Otherwise, it returns a 404 if the job does not exist, or a 204 if the job did not complete yet.
+Otherwise, it returns a 404 if the job does not exist, or a 204 if the job has not completed yet.
