@@ -22,14 +22,16 @@ async fn main() -> std::io::Result<()> {
                 .short("k")
                 .long("kafka_hosts")
                 .takes_value(true)
-                .help("Kafka hosts separated by a colon"),
+                .help("Kafka hosts separated by a colon")
+                .required(true),
         )
         .arg(
             Arg::with_name("http_port")
                 .short("p")
                 .long("http_port")
                 .takes_value(true)
-                .help("HTTP port"),
+                .help("HTTP port")
+                .required(true),
         )
         .get_matches();
 
