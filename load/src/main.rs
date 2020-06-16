@@ -37,10 +37,10 @@ async fn main() -> std::io::Result<()> {
 
     let kafka_hosts_args = args
         .value_of("kafka_hosts")
-        .expect("kafka_hosts argument not set");
+        .unwrap();
     let http_port = args
         .value_of("http_port")
-        .expect("http_port argument not set");
+        .unwrap();
 
     let kafka_hosts = parse_kafka_hosts(kafka_hosts_args);
 
