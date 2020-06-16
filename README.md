@@ -2,7 +2,7 @@
 
 # franz
 
-A tiny Kafka producer load tester, written in Rust.
+A tiny Kafka producer load tester, written in Rust. It exposes REST endpoints to create load producer jobs and query results.
 
 # Run
 
