@@ -8,7 +8,8 @@ env:
   CARGO_TERM_COLOR: always
 jobs:
   build-load:
-    working-directory: ./load
+    env:
+      working-directory: ./load
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
