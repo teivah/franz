@@ -19,3 +19,15 @@ jobs:
     - name: Run tests
       run: cargo test --verbose
       working-directory: ${{env.working-directory}}
+  build-replicator:
+    env:
+      working-directory: ./replicator
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: cargo build --verbose
+        working-directory: ${{env.working-directory}}
+      - name: Run tests
+        run: cargo test --verbose
+        working-directory: ${{env.working-directory}}
