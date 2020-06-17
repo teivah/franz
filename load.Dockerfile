@@ -1,7 +1,7 @@
 FROM rust:1.44.0 as build
 WORKDIR /app
-COPY Cargo.toml /app/
-COPY src/ /app/src
+COPY load/Cargo.toml /app/
+COPY load/src/ /app/src
 RUN cargo build --release
 
 FROM rust:1.44.0
