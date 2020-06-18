@@ -1,9 +1,10 @@
 mod kafka;
 
-use crate::kafka::create_replicators;
+use crate::kafka::{create_replicators, KafkaConfig};
 use clap::{App as ClapApp, Arg};
 use futures::executor::block_on;
 use std::collections::HashMap;
+use std::time::Duration;
 use tokio::task;
 
 #[tokio::main]
@@ -25,6 +26,38 @@ pub async fn main() {
                 .help("Replication configuration: e.g. \"a=b;c=d\"")
                 .required(true),
         )
+        .arg(
+            Arg::with_name("offset")
+                .short("o")
+                .long("offset")
+                .takes_value(true)
+                .help("Offset: 0 (earliest) or 1 (latest)")
+                .required(true),
+        )
+        .arg(
+            Arg::with_name("required-acks")
+                .short("a")
+                .long("required-acks")
+                .takes_value(true)
+                .help("Number of required acks for the producer: 0 (none), 1 (one), -1 (all)")
+                .required(true),
+        )
+        .arg(
+            Arg::with_name("group")
+                .short("g")
+                .long("group")
+                .takes_value(true)
+                .help("Consumer group")
+                .required(true),
+        )
+        .arg(
+            Arg::with_name("producer-timeout")
+                .short("t")
+                .long("producer-timeout")
+                .takes_value(true)
+                .help("Producer timeout in ms")
+                .required(true),
+        )
         .get_matches();
 
     let kafka_hosts_args = args.value_of("kafka_hosts").unwrap();
@@ -33,7 +66,37 @@ pub async fn main() {
     let replication_args = args.value_of("replication").unwrap();
     let replication = parse_replication(replication_args).expect("configuration error");
 
-    task::spawn_blocking(|| create_replicators(kafka_hosts, replication)).await;
+    let offset_args = args.value_of("offset").unwrap();
+    let offset = offset_args.parse::<i8>().expect("unable to parse offset");
+
+    let required_ack_args = args.value_of("required-acks").unwrap();
+    let required_acks = required_ack_args
+        .parse::<i8>()
+        .expect("unable to parse required-acks");
+
+    let group = args.value_of("group").unwrap().to_owned();
+
+    let producer_timeout_args = args.value_of("producer-timeout").unwrap();
+    let producer_timeout = Duration::from_millis(
+        producer_timeout_args
+            .parse::<u64>()
+            .expect("unable to parse producer-timeout"),
+    );
+
+    task::spawn_blocking(move || {
+        create_replicators(
+            kafka_hosts,
+            replication,
+            KafkaConfig {
+                // TODO
+                offset,
+                group: group,
+                required_acks,
+                producer_timeout: producer_timeout,
+            },
+        )
+    })
+    .await;
 }
 
 // TODO reuse?
