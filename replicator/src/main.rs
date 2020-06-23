@@ -88,7 +88,6 @@ pub async fn main() {
             kafka_hosts,
             replication,
             KafkaConfig {
-                // TODO
                 offset,
                 group: group,
                 required_acks,
@@ -99,7 +98,6 @@ pub async fn main() {
     .await;
 }
 
-// TODO reuse?
 fn parse_kafka_hosts(kafka_hosts: &str) -> Vec<String> {
     kafka_hosts
         .split(",")
