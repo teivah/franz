@@ -18,29 +18,25 @@ lazy_static! {
 async fn main() -> std::io::Result<()> {
     let args = ClapApp::new("franz")
         .arg(
-            Arg::with_name("kafka_hosts")
+            Arg::with_name("kafka-hosts")
                 .short("k")
-                .long("kafka_hosts")
+                .long("kafka-hosts")
                 .takes_value(true)
                 .help("Kafka hosts separated by a colon")
                 .required(true),
         )
         .arg(
-            Arg::with_name("http_port")
+            Arg::with_name("http-port")
                 .short("p")
-                .long("http_port")
+                .long("http-port")
                 .takes_value(true)
                 .help("HTTP port")
                 .required(true),
         )
         .get_matches();
 
-    let kafka_hosts_args = args
-        .value_of("kafka_hosts")
-        .unwrap();
-    let http_port = args
-        .value_of("http_port")
-        .unwrap();
+    let kafka_hosts_args = args.value_of("kafka_hosts").unwrap();
+    let http_port = args.value_of("http_port").unwrap();
 
     let kafka_hosts = parse_kafka_hosts(kafka_hosts_args);
 

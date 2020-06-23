@@ -11,9 +11,9 @@ use tokio::task;
 pub async fn main() {
     let args = ClapApp::new("franz")
         .arg(
-            Arg::with_name("kafka_hosts")
+            Arg::with_name("kafka-hosts")
                 .short("k")
-                .long("kafka_hosts")
+                .long("kafka-hosts")
                 .takes_value(true)
                 .help("Kafka hosts separated by a colon")
                 .required(true),
@@ -23,7 +23,7 @@ pub async fn main() {
                 .short("r")
                 .long("replication")
                 .takes_value(true)
-                .help("Replication configuration: e.g. \"a=b;c=d\"")
+                .help("Replication configuration, e.g. \"source1=target1;source2=target2\"")
                 .required(true),
         )
         .arg(

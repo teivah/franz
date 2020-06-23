@@ -2,31 +2,37 @@
 
 # franz
 
+A collection of Kafka utility tools:
+* [franz-load](#franz-load): Kafka load tester.
+* [franz-replicator](#franz-replicator): replicate Kafka topics.
+
 A tiny Kafka producer load tester, written in Rust. It exposes REST endpoints to create load producer jobs and query results.
 
-# Run
+## franz-load
 
-## Parameters
+### Run
+
+#### Parameters
 
 * `-p`: HTTP port used by franz.
 * `-k`: Kafka hosts, comma separated.
 
-## Docker
+#### Docker
 
 ```shell script
-$ docker run -p 8080:8080 teivah/franz -- -p 8080 -k kafka:9092
+$ docker run -p 8080:8080 teivah/franz-load -- -p 8080 -k kafka:9092
 ```
 
-## Local
+#### Local
 
 ```shell script
 $ cargo build --release
-$ ./target/release/franz -k localhost:9092 -p 8080
+$ ./target/release/franz -k kafka:9092 -p 8080
 ```
 
-# API
+### API
 
-## Produce
+#### Produce
 
 Description: Triggers a job
 
@@ -60,7 +66,7 @@ The response returns an 201 containing an HATEAOS response with the job ID creat
 }
 ```
 
-## Status
+#### Status
 
 Description: Get job status.
 
@@ -76,3 +82,35 @@ If the job has been completed, it will return a 200:
 ```
 
 Otherwise, it returns a 404 if the job does not exist, or a 204 if the job has not completed yet.
+
+## franz-replicator
+
+### Run
+
+#### Parameters
+
+* `-k`: Kafka hosts, comma separated.
+* `-r`: Replication configuration, e.g. _source1=target1;source2=target2_.
+* `-o`: Offset: 0 (earliest) or 1 (latest).
+* `-a`: Number of required acks for the producer: 0 (none), 1 (one), -1 (all).
+* `-g`: Consumer group.
+* `-t`: Producer timeout in ms.
+
+|  dazd | dazd  | dazd  | dazd  | dazd  |
+|---|---|---|---|---|
+| dazd  | dazd  |   |   |   |
+|   |   |   |   |   |
+|   |   |   |   |   |
+
+#### Docker
+
+```shell script
+$ docker run -p 8080:8080 teivah/franz-load -- -k kafka:9092 -r source=target -o 1 -a 0, -g consumer_group -t 3000
+```
+
+#### Local
+
+```shell script
+$ cargo build --release
+$ ./target/release/franz -k kafka:9092 -p 8080
+```
