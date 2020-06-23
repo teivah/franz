@@ -16,7 +16,7 @@ A tiny Kafka producer load tester, written in Rust. It exposes REST endpoints to
 
 |  Short | Long  | Description  |
 |---|---|---|
-| -p  | --http-port  | Kafka hosts, comma separated.  |
+| -p  | --http-port  | HTTP port used by franz.  |
 | -k  | --kafka-hosts  | Kafka hosts, comma separated. |
 
 #### Docker
