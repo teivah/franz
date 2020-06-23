@@ -89,18 +89,14 @@ Otherwise, it returns a 404 if the job does not exist, or a 204 if the job has n
 
 #### Parameters
 
-* `-k`: Kafka hosts, comma separated.
-* `-r`: Replication configuration, e.g. _source1=target1;source2=target2_.
-* `-o`: Offset: 0 (earliest) or 1 (latest).
-* `-a`: Number of required acks for the producer: 0 (none), 1 (one), -1 (all).
-* `-g`: Consumer group.
-* `-t`: Producer timeout in ms.
-
-|  dazd | dazd  | dazd  | dazd  | dazd  |
-|---|---|---|---|---|
-| dazd  | dazd  |   |   |   |
-|   |   |   |   |   |
-|   |   |   |   |   |
+|  Short | Long  | Description  |
+|---|---|---|
+| -k  | --kafka-hosts  | Kafka hosts, comma separated. |
+| -r  | --replication  | Replication configuration, e.g. _source1=target1;source2=target2_.  |
+| -o  | --offset  | Offset: 0 (earliest) or 1 (latest).  |
+| -a  | --required-acks  | Number of required acks for the producer: 0 (none), 1 (one), -1 (all).  |
+| -g  | --group  | Consumer group. |
+| -t  | --producer-timeout  | Producer timeout in ms. |
 
 #### Docker
 
