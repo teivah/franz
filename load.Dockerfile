@@ -6,5 +6,5 @@ RUN cargo build --release
 
 FROM rust:1.44.0
 WORKDIR /app
-COPY --from=build /app/target/release/franz /app/
+COPY --from=build /app/target/release/franz-load /app/
 ENTRYPOINT ["/app/franz"]
