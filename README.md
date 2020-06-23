@@ -14,8 +14,10 @@ A tiny Kafka producer load tester, written in Rust. It exposes REST endpoints to
 
 #### Parameters
 
-* `-p`: HTTP port used by franz.
-* `-k`: Kafka hosts, comma separated.
+|  Short | Long  | Description  |
+|---|---|---|
+| -p  | --http-port  | Kafka hosts, comma separated.  |
+| -k  | --kafka-hosts  | Kafka hosts, comma separated. |
 
 #### Docker
 
@@ -27,7 +29,7 @@ $ docker run -p 8080:8080 teivah/franz-load -- -p 8080 -k kafka:9092
 
 ```shell script
 $ cargo build --release
-$ ./target/release/franz -k kafka:9092 -p 8080
+$ ./target/release/franz -p 8080 -k kafka:9092 
 ```
 
 ### API
@@ -108,5 +110,5 @@ $ docker run -p 8080:8080 teivah/franz-load -- -k kafka:9092 -r source=target -o
 
 ```shell script
 $ cargo build --release
-$ ./target/release/franz -k kafka:9092 -p 8080
+$ ./target/release/franz-load -k kafka:9092 -r source=target -o 1 -a 0, -g consumer_group -t 3000
 ```
